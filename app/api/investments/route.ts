@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server"; import {connectDB} from "@/lib/db"; import Investment from "@/models/Investment"; import {getSession} from "@/lib/auth";
+export async function GET(){const s=await getSession();if(!s)return NextResponse.json({error:"Unauthorized"},{status:401});await connectDB();const q=s.role==="admin"?{}:{userId:s.id};return NextResponse.json({investments:await Investment.find(q).populate("userId","name email").sort({createdAt:-1})});}

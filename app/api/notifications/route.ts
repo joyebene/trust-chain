@@ -1,0 +1,3 @@
+import {NextResponse} from "next/server"; import {connectDB} from "@/lib/db"; import Notification from "@/models/Notification"; import {getSession} from "@/lib/auth";
+export async function GET(){const s=await getSession();if(!s)return NextResponse.json({error:"Unauthorized"},{status:401});await connectDB();return NextResponse.json({notifications:await Notification.find({userId:s.id}).sort({createdAt:-1}).limit(30)});}
+export async function PATCH(){const s=await getSession();if(!s)return NextResponse.json({error:"Unauthorized"},{status:401});await connectDB();await Notification.updateMany({userId:s.id,read:false},{$set:{read:true}});return NextResponse.json({ok:true});}
