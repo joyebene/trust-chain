@@ -27,7 +27,7 @@ export default function Home() {
           </nav>
           <div className="nav-actions">
             <Link href="/login" className="btn btn-ghost">Sign in</Link>
-            <Link href="/register" className="btn btn-gold">Create account <ArrowRight size={16}/></Link>
+            <Link href="/register" className="btn btn-gold">Create account</Link>
           </div>
         </div>
       </header>
