@@ -28,6 +28,52 @@ export default function DashboardShell({
   const pathname = usePathname();
 
   useEffect(() => {
+    async function loadSession() {
+      try {
+        const response = await fetch("/api/me", {
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (response.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.user) {
+          setUser(data.user);
+        }
+
+        const notificationResponse =
+          await fetch("/api/notifications", {
+            credentials: "include",
+            cache: "no-store",
+          });
+
+        if (notificationResponse.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+
+        const notificationData =
+          await notificationResponse.json();
+
+        setUnread(
+          (notificationData.notifications || []).filter(
+            (n: any) => !n.read
+          ).length
+        );
+      } catch (error) {
+        console.error("Session loading error:", error);
+      }
+    }
+
+    loadSession();
+  }, []);
+
+  useEffect(() => {
     Promise.all([
       fetch("/api/me"),
       fetch("/api/notifications"),
@@ -46,6 +92,7 @@ export default function DashboardShell({
       );
     });
   }, []);
+
 
   async function logout() {
     await fetch("/api/auth/logout", {
