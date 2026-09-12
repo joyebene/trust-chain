@@ -1,9 +1,696 @@
 "use client";
-import {useEffect,useState} from "react"; import Image from "next/image"; import Link from "next/link"; import {Check, Clock3, CreditCard, LayoutDashboard, LogOut, Plus, Users, WalletCards, X} from "lucide-react"; import {dateTime} from "@/lib/format";
-export default function Admin(){const [stats,setStats]=useState<any>({}),[payments,setPayments]=useState<any[]>([]),[methods,setMethods]=useState<any[]>([]),[show,setShow]=useState(false),[method,setMethod]=useState<any>({name:"",type:"bank",currency:"NGN",institution:"",accountName:"",accountNumber:"",walletAddress:"",instructions:""}),[reason,setReason]=useState("");async function load(){const [s,p,m]=await Promise.all([fetch("/api/admin/stats"),fetch("/api/admin/payments"),fetch("/api/admin/payment-methods")]);setStats(await s.json());setPayments((await p.json()).payments||[]);setMethods((await m.json()).methods||[])}useEffect(()=>{load()},[]);
-async function review(id:string,action:"approve"|"decline"){if(action==="decline"&&!reason.trim())return alert("Enter a decline reason first.");await fetch("/api/admin/payments",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId:id,action,reason})});setReason("");load()}
-async function addMethod(){const r=await fetch("/api/admin/payment-methods",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(method)});if(!r.ok)return alert("Unable to add payment method.");setShow(false);load()}
-return <div className="admin-shell"><aside className="admin-side"><Link href="/" className="side-brand"><Image src="/logo.jpeg" alt="" width={46} height={46}/><span>TRUST <b>CHAIN</b></span></Link><nav><a className="active"><LayoutDashboard/> Overview</a><a href="#payments"><CreditCard/> Payments</a><a href="#methods"><WalletCards/> Payment methods</a><a href="#users"><Users/> Users</a></nav><button onClick={async()=>{await fetch("/api/auth/logout",{method:"POST"});location.href="/login"}} className="logout"><LogOut/> Sign out</button></aside><main className="admin-main"><header className="admin-header"><div><span className="muted">Administration</span><h1>Trust Chain control center</h1></div><Link href="/" className="btn btn-outline">View website</Link></header><div className="container-app"><div className="admin-stat-grid"><div><Users/><span>Users</span><b>{stats.users||0}</b></div><div><Clock3/><span>Pending payments</span><b>{stats.pending||0}</b></div><div><Check/><span>Approved payments</span><b>{stats.approved||0}</b></div><div><WalletCards/><span>Active investments</span><b>{stats.investments||0}</b></div></div>
-<section id="payments" className="panel"><div className="panel-head"><div><h3>Payment verification</h3><p>Review incoming investment payments before approval.</p></div></div><div className="table-scroll"><table><thead><tr><th>Client</th><th>Amount</th><th>Method</th><th>Reference</th><th>Submitted</th><th>Status / action</th></tr></thead><tbody>{payments.map(p=><tr key={p._id}><td><b>{p.userId?.name}</b><small>{p.userId?.email}</small></td><td>{p.amount.toLocaleString()} {p.currency}</td><td>{p.paymentMethodId?.name}</td><td>{p.reference}</td><td>{dateTime(p.createdAt)}</td><td>{p.status==="pending"?<div className="action-stack"><button className="mini-btn approve" onClick={()=>review(p._id,"approve")}><Check/> Approve</button><button className="mini-btn decline" onClick={()=>review(p._id,"decline")}><X/> Decline</button></div>:<span className={`status ${p.status}`}>{p.status}</span>}</td></tr>)}</tbody></table></div>{!payments.length&&<div className="empty">No payment submissions yet.</div>}</section>
-<section id="methods" className="panel"><div className="panel-head"><div><h3>Payment methods</h3><p>These details are displayed to users when they choose to invest.</p></div><button className="btn btn-gold" onClick={()=>setShow(true)}><Plus size={16}/> Add method</button></div><div className="method-admin-grid">{methods.map(m=><div className="method-admin" key={m._id}><div><span className="method-currency">{m.currency}</span><b>{m.name}</b></div><p>{m.institution}</p><small>{m.accountName}<br/>{m.accountNumber||m.walletAddress}</small></div>)}</div></section></div></main>{show&&<div className="modal-backdrop" onMouseDown={()=>setShow(false)}><div className="modal" onMouseDown={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setShow(false)}><X/></button><div className="modal-head"><div className="section-kicker">PAYMENT METHOD</div><h2>Add account or wallet</h2></div><div className="form"><label>Name<input value={method.name} onChange={e=>setMethod({...method,name:e.target.value})} placeholder="Main NGN Account"/></label><div className="two"><label>Type<select value={method.type} onChange={e=>setMethod({...method,type:e.target.value})}><option value="bank">Bank</option><option value="wallet">Wallet</option></select></label><label>Currency<select value={method.currency} onChange={e=>setMethod({...method,currency:e.target.value})}><option>NGN</option><option>USD</option><option>BTC</option></select></label></div><label>Bank / institution<input value={method.institution} onChange={e=>setMethod({...method,institution:e.target.value})} placeholder="Example Bank"/></label><label>Account name<input value={method.accountName} onChange={e=>setMethod({...method,accountName:e.target.value})}/></label><label>Account number / wallet address<input value={method.type==="bank"?method.accountNumber:method.walletAddress} onChange={e=>setMethod({...method,[method.type==="bank"?"accountNumber":"walletAddress"]:e.target.value})}/></label><label>Instructions<textarea value={method.instructions} onChange={e=>setMethod({...method,instructions:e.target.value})} placeholder="Payment instructions"/></label><button className="btn btn-gold btn-block" onClick={addMethod}>Save payment method</button></div></div></div>}</div>
+
+import { useEffect, useState } from "react";
+
+import Link from "next/link";
+
+import {
+    ArrowDownRight,
+    ArrowUpRight,
+    CreditCard,
+    DollarSign,
+    Users,
+    Wallet,
+} from "lucide-react";
+
+type Stats = {
+    totalUsers: number;
+    totalPayments: number;
+    pendingPayments: number;
+    approvedPayments: number;
+    totalInvestments: number;
+    totalPaid: number;
+};
+
+type Payment = {
+    _id: string;
+
+    userId: {
+        name: string;
+        email: string;
+        phone: string;
+    };
+
+    amount: number;
+    currency: string;
+    status: string;
+    transactionHash: string;
+
+    createdAt: string;
+};
+
+type Withdrawal = {
+    _id: string;
+
+    userId: {
+        name: string;
+        email: string;
+        phone: string;
+        balanceUSD?: number;
+    };
+
+    amountUSD: number;
+    payoutAmount: number;
+    currency: string;
+    network: string;
+    walletAddress: string;
+    status: string;
+
+    declineReason?: string;
+    transactionHash?: string;
+
+    createdAt: string;
+};
+
+export default function AdminOverviewPage() {
+    const [stats, setStats] = useState<Stats>({
+        totalUsers: 0,
+        totalPayments: 0,
+        pendingPayments: 0,
+        approvedPayments: 0,
+        totalInvestments: 0,
+        totalPaid: 0,
+    });
+
+    const [payments, setPayments] =
+        useState<Payment[]>([]);
+
+    const [withdrawals, setWithdrawals] =
+        useState<Withdrawal[]>([]);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    useEffect(() => {
+        loadDashboard();
+    }, []);
+
+    const loadDashboard = async () => {
+        try {
+            setLoading(true);
+
+            const [
+                statsRes,
+                paymentsRes,
+                withdrawalsRes,
+            ] = await Promise.all([
+                fetch("/api/admin/stats"),
+                fetch("/api/admin/payments"),
+                fetch("/api/admin/withdrawals"),
+            ]);
+
+            /**
+             * ADMIN STATS
+             */
+            if (statsRes.ok) {
+                const data =
+                    await statsRes.json();
+
+                setStats({
+                    totalUsers:
+                        data.totalUsers ??
+                        data.users ??
+                        0,
+
+                    totalPayments:
+                        data.totalPayments ??
+                        data.payments ??
+                        0,
+
+                    pendingPayments:
+                        data.pendingPayments ??
+                        data.pending ??
+                        0,
+
+                    approvedPayments:
+                        data.approvedPayments ??
+                        data.approved ??
+                        0,
+
+                    totalInvestments:
+                        data.totalInvestments ??
+                        data.investments ??
+                        0,
+
+                    totalPaid:
+                        data.totalPaid ??
+                        data.totalAmount ??
+                        0,
+                });
+            }
+
+            /**
+             * RECENT PAYMENTS
+             */
+            if (paymentsRes.ok) {
+                const data =
+                    await paymentsRes.json();
+
+                const paymentList =
+                    Array.isArray(data)
+                        ? data
+                        : data.payments || [];
+
+                setPayments(
+                    paymentList.slice(0, 5)
+                );
+            }
+
+            /**
+             * RECENT WITHDRAWALS
+             */
+            if (withdrawalsRes.ok) {
+                const data =
+                    await withdrawalsRes.json();
+
+                const withdrawalList =
+                    Array.isArray(data)
+                        ? data
+                        : data.withdrawals || [];
+
+                setWithdrawals(
+                    withdrawalList.slice(0, 5)
+                );
+            }
+        } catch (error) {
+            console.error(
+                "Dashboard error:",
+                error
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    /**
+     * Format crypto and fiat amounts.
+     */
+    const formatMoney = (
+        amount: number,
+        currency = "USD"
+    ) => {
+        const value =
+            Number(amount) || 0;
+
+        /**
+         * Crypto currencies
+         */
+        if (
+            currency === "BTC" ||
+            currency === "ETH" ||
+            currency === "USDT" ||
+            currency === "USDC"
+        ) {
+            return `${value.toLocaleString(
+                undefined,
+                {
+                    minimumFractionDigits:
+                        currency === "BTC"
+                            ? 8
+                            : currency === "ETH"
+                              ? 6
+                              : 2,
+
+                    maximumFractionDigits:
+                        currency === "BTC"
+                            ? 8
+                            : currency === "ETH"
+                              ? 6
+                              : 2,
+                }
+            )} ${currency}`;
+        }
+
+        /**
+         * Normal fiat currencies
+         */
+        return new Intl.NumberFormat(
+            "en-NG",
+            {
+                style: "currency",
+                currency,
+                maximumFractionDigits: 2,
+            }
+        ).format(value);
+    };
+
+    const formatUSD = (
+        amount: number
+    ) => {
+        return new Intl.NumberFormat(
+            "en-US",
+            {
+                style: "currency",
+                currency: "USD",
+                maximumFractionDigits: 2,
+            }
+        ).format(
+            Number(amount) || 0
+        );
+    };
+
+    const formatDate = (
+        date: string
+    ) => {
+        return new Date(
+            date
+        ).toLocaleDateString(
+            "en-NG",
+            {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+            }
+        );
+    };
+
+    return (
+        <>
+            <header className="admin-header">
+                <div>
+                    <h1>
+                        Dashboard Overview
+                    </h1>
+
+                    <p>
+                        Monitor your Trust Chain
+                        platform.
+                    </p>
+                </div>
+            </header>
+
+            <div className="container-app">
+
+                {/* =========================
+                    STATISTICS
+                ========================== */}
+
+                <div className="admin-stat-grid">
+
+                    <div className="admin-stat-card">
+                        <div className="admin-stat-icon">
+                            <Users size={21} />
+                        </div>
+
+                        <div>
+                            <span>
+                                Total Users
+                            </span>
+
+                            <strong>
+                                {stats.totalUsers}
+                            </strong>
+                        </div>
+
+                        <ArrowUpRight
+                            size={18}
+                        />
+                    </div>
+
+                    <div className="admin-stat-card">
+                        <div className="admin-stat-icon">
+                            <CreditCard
+                                size={21}
+                            />
+                        </div>
+
+                        <div>
+                            <span>
+                                Total Payments
+                            </span>
+
+                            <strong>
+                                {stats.totalPayments}
+                            </strong>
+                        </div>
+
+                        <ArrowUpRight
+                            size={18}
+                        />
+                    </div>
+
+                    <div className="admin-stat-card">
+                        <div className="admin-stat-icon">
+                            <Wallet size={21} />
+                        </div>
+
+                        <div>
+                            <span>
+                                Pending Payments
+                            </span>
+
+                            <strong>
+                                {
+                                    stats.pendingPayments
+                                }
+                            </strong>
+                        </div>
+
+                        <ArrowDownRight
+                            size={18}
+                        />
+                    </div>
+
+                    <div className="admin-stat-card">
+                        <div className="admin-stat-icon">
+                            <DollarSign
+                                size={21}
+                            />
+                        </div>
+
+                        <div>
+                            <span>
+                                Total Paid
+                            </span>
+
+                            <strong>
+                                {formatMoney(
+                                    stats.totalPaid
+                                )}
+                            </strong>
+                        </div>
+
+                        <ArrowUpRight
+                            size={18}
+                        />
+                    </div>
+
+                </div>
+
+                {/* =========================
+                    RECENT PAYMENTS
+                ========================== */}
+
+                <section className="panel">
+                    <div className="panel-head">
+                        <div>
+                            <h2>
+                                Recent Payments
+                            </h2>
+
+                            <p>
+                                Latest investment
+                                payment submissions.
+                            </p>
+                        </div>
+
+                        <Link
+                            href="/admin/payments"
+                            className="btn btn-outline"
+                        >
+                            View All
+                        </Link>
+                    </div>
+
+                    {loading ? (
+                        <div className="empty-state">
+                            Loading payments...
+                        </div>
+                    ) : payments.length === 0 ? (
+                        <div className="empty-state">
+                            No payments found.
+                        </div>
+                    ) : (
+                        <div className="table-scroll">
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            Client
+                                        </th>
+
+                                        <th>
+                                            Amount
+                                        </th>
+
+                                        <th>
+                                            Transaction
+                                        </th>
+
+                                        <th>
+                                            Date
+                                        </th>
+
+                                        <th>
+                                            Status
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {payments.map(
+                                        (
+                                            payment
+                                        ) => (
+                                            <tr
+                                                key={
+                                                    payment._id
+                                                }
+                                            >
+                                                <td>
+                                                    <div className="client-cell">
+                                                        <strong>
+                                                            {
+                                                                payment
+                                                                    .userId
+                                                                    ?.name
+                                                            }
+                                                        </strong>
+
+                                                        <small>
+                                                            {
+                                                                payment
+                                                                    .userId
+                                                                    ?.email
+                                                            }
+                                                        </small>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <strong>
+                                                        {formatMoney(
+                                                            payment.amount,
+                                                            payment.currency ||
+                                                                "USD"
+                                                        )}
+                                                    </strong>
+                                                </td>
+
+                                                <td>
+                                                    <span
+                                                        title={
+                                                            payment.transactionHash
+                                                        }
+                                                    >
+                                                        {payment.transactionHash
+                                                            ? `${payment.transactionHash.slice(
+                                                                  0,
+                                                                  8
+                                                              )}...${payment.transactionHash.slice(
+                                                                  -8
+                                                              )}`
+                                                            : "—"}
+                                                    </span>
+                                                </td>
+
+                                                <td>
+                                                    {formatDate(
+                                                        payment.createdAt
+                                                    )}
+                                                </td>
+
+                                                <td>
+                                                    <span
+                                                        className={`status status-${payment.status?.toLowerCase()}`}
+                                                    >
+                                                        {
+                                                            payment.status
+                                                        }
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        )
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </section>
+
+                {/* =========================
+                    RECENT WITHDRAWALS
+                ========================== */}
+
+                <section
+                    className="panel"
+                    style={{
+                        marginTop: "24px",
+                    }}
+                >
+                    <div className="panel-head">
+                        <div>
+                            <h2>
+                                Recent Withdrawals
+                            </h2>
+
+                            <p>
+                                Latest withdrawal
+                                requests from users.
+                            </p>
+                        </div>
+
+                        <Link
+                            href="/admin/withdrawals"
+                            className="btn btn-outline"
+                        >
+                            View All
+                        </Link>
+                    </div>
+
+                    {loading ? (
+                        <div className="empty-state">
+                            Loading withdrawals...
+                        </div>
+                    ) : withdrawals.length ===
+                      0 ? (
+                        <div className="empty-state">
+                            No withdrawals found.
+                        </div>
+                    ) : (
+                        <div className="table-scroll">
+                            <table className="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            Client
+                                        </th>
+
+                                        <th>
+                                            Amount
+                                        </th>
+
+                                        <th>
+                                            Network
+                                        </th>
+
+                                        <th>
+                                            Date
+                                        </th>
+
+                                        <th>
+                                            Status
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {withdrawals.map(
+                                        (
+                                            withdrawal
+                                        ) => (
+                                            <tr
+                                                key={
+                                                    withdrawal._id
+                                                }
+                                            >
+                                                <td>
+                                                    <div className="client-cell">
+                                                        <strong>
+                                                            {
+                                                                withdrawal
+                                                                    .userId
+                                                                    ?.name ||
+                                                                "Unknown"
+                                                            }
+                                                        </strong>
+
+                                                        <small>
+                                                            {
+                                                                withdrawal
+                                                                    .userId
+                                                                    ?.email ||
+                                                                "No email"
+                                                            }
+                                                        </small>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    <strong>
+                                                        {formatMoney(
+                                                            withdrawal.payoutAmount,
+                                                            withdrawal.currency
+                                                        )}
+                                                    </strong>
+
+                                                    <small
+                                                        style={{
+                                                            display:
+                                                                "block",
+                                                            marginTop:
+                                                                "3px",
+                                                            color:
+                                                                "var(--muted)",
+                                                        }}
+                                                    >
+                                                        {formatUSD(
+                                                            withdrawal.amountUSD
+                                                        )}{" "}
+                                                        USD
+                                                    </small>
+                                                </td>
+
+                                                <td>
+                                                    <div>
+                                                        <strong>
+                                                            {
+                                                                withdrawal.network
+                                                            }
+                                                        </strong>
+
+                                                        <small
+                                                            style={{
+                                                                display:
+                                                                    "block",
+                                                                marginTop:
+                                                                    "3px",
+                                                                color:
+                                                                    "var(--muted)",
+                                                            }}
+                                                        >
+                                                            {
+                                                                withdrawal.currency
+                                                            }
+                                                        </small>
+                                                    </div>
+                                                </td>
+
+                                                <td>
+                                                    {formatDate(
+                                                        withdrawal.createdAt
+                                                    )}
+                                                </td>
+
+                                                <td>
+                                                    <span
+                                                        className={`status status-${withdrawal.status?.toLowerCase()}`}
+                                                    >
+                                                        {
+                                                            withdrawal.status
+                                                        }
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        )
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </section>
+
+            </div>
+        </>
+    );
 }
