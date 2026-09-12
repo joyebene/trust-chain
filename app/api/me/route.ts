@@ -7,8 +7,6 @@ export async function GET() {
     try {
         const s = await getSession();
 
-        console.log("SESSION:", s);
-
         if (!s) {
             console.log("NO SESSION");
 
@@ -20,11 +18,7 @@ export async function GET() {
 
         await connectDB();
 
-        console.log("SESSION USER ID:", s.id);
-
         const u = await User.findById(s.id).select("-passwordHash");
-
-        console.log("FOUND USER:", u);
 
         if (!u) {
             return NextResponse.json(
