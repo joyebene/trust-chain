@@ -20,7 +20,7 @@ export async function getSession(): Promise<Session | null> {
   } catch { return null; }
 }
 
-export async function requireSession(role?: "user"|"admin") {
+export async function requireSession(role?: "user" | "admin") {
   const session = await getSession();
   if (!session || (role && session.role !== role)) throw new Error("UNAUTHORIZED");
   return session;

@@ -8,6 +8,7 @@ import User from "@/models/User";
 import Investment from "@/models/Investment";
 import Notification from "@/models/Notification";
 import { sendMail } from "@/lib/email";
+import PaymentMethod from "@/models/PaymentMethod";
 
 function getCryptoUsdRate(currency: string) {
     /*
@@ -104,18 +105,21 @@ export async function GET() {
             payments: paymentsWithEstimate,
         });
     } catch (error) {
-        console.error(
-            "Get payments error:",
-            error
-        );
+        console.error("Get payments error:", error);
+
+        if (
+            error instanceof Error &&
+            error.message === "UNAUTHORIZED"
+        ) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
 
         return NextResponse.json(
-            {
-                error: "Unauthorized",
-            },
-            {
-                status: 401,
-            }
+            { error: "Failed to load payments." },
+            { status: 500 }
         );
     }
 }

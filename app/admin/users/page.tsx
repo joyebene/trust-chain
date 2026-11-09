@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import {
+  Eye,
   Search,
   UserCheck,
   UserX,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 
 type User = {
   _id: string;
@@ -98,9 +100,8 @@ export default function AdminUsersPage() {
   const filteredUsers = users.filter((user) => {
     const value = search.toLowerCase();
 
-    const name = `${user.firstName || ""} ${
-      user.lastName || ""
-    }`.toLowerCase();
+    const name = `${user.firstName || ""} ${user.lastName || ""
+      }`.toLowerCase();
 
     const email = user.email?.toLowerCase() || "";
     const phone = user.phone?.toLowerCase() || "";
@@ -223,24 +224,38 @@ export default function AdminUsersPage() {
                         )}
                       </td>
 
-                      <td>
-                        <button
-                          type="button"
-                          className={`btn ${
-                            user.isActive !== false
-                              ? "btn-danger"
-                              : "btn-primary"
-                          }`}
-                          onClick={() =>
-                            toggleUserStatus(user)
-                          }
-                        >
-                          {user.isActive !== false
-                            ? "Deactivate"
-                            : "Activate"}
-                        </button>
-                      </td>
-                    </tr>
+                      <td className="align-middle">
+                        <div className="flex items-center justify-center gap-2 whitespace-nowrap">
+
+                          <Link
+                            href={`/admin/users/${user._id}`}
+                            title="View User Details"
+                            className="inline-flex items-center justify-center w-9 h-9 shrink-0 rounded-full hover:bg-gray-100 transition"
+                          >
+                            <Eye
+                              size={18}
+                              color="blue"
+                            />
+                          </Link>
+
+                          <div className="w-1 h-1 bg-gray-300 rounded-full" />
+
+                          <button
+                            type="button"
+                            className={`btn ${user.isActive !== false
+                                ? "btn-danger"
+                                : "btn-primary"
+                              }`}
+                            onClick={() => toggleUserStatus(user)}
+                          >
+                            {user.isActive !== false
+                              ? "Deactivate"
+                              : "Activate"}
+                          </button>
+
+                        </div>
+                      </td>                    
+                      </tr>
                   ))}
                 </tbody>
               </table>
