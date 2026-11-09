@@ -47,10 +47,10 @@ export async function GET() {
         await connectDB();
 
         /*
-        ==========================================
-        GET ALL PAYMENTS
-        ==========================================
-        */
+                ==========================================
+                GET ALL PAYMENTS
+                ==========================================
+                        */
 
         const payments = await Payment.find()
             .populate(
@@ -62,8 +62,27 @@ export async function GET() {
                 createdAt: -1,
             });
 
+        const paymentsWithEstimate = payments.map((payment) => {
+            const paymentData = payment.toObject();
+
+            const rate = getCryptoUsdRate(
+                payment.currency
+            );
+
+            const estimatedAmountUSD =
+                Number(payment.amount) * rate;
+
+            return {
+                ...paymentData,
+                estimatedAmountUSD:
+                    rate > 0
+                        ? Math.round(estimatedAmountUSD * 100) / 100
+                        : null,
+            };
+        });
+
         return NextResponse.json({
-            payments,
+            payments: paymentsWithEstimate,
         });
     } catch (error) {
         console.error(
@@ -110,6 +129,7 @@ export async function PATCH(
             paymentId,
             action,
             reason,
+            creditedAmountUSD: adminApprovedAmount,
         } = body;
 
         /*
@@ -234,7 +254,7 @@ export async function PATCH(
 
             payment.declineReason =
                 typeof reason === "string" &&
-                reason.trim()
+                    reason.trim()
                     ? reason.trim()
                     : "Payment declined.";
 
@@ -261,8 +281,7 @@ export async function PATCH(
                 message:
                     `Your ${payment.currency} payment ` +
                     `has been declined. ` +
-                    `${
-                        payment.declineReason
+                    `${payment.declineReason
                     }`,
 
                 type: "payment",
@@ -342,45 +361,50 @@ export async function PATCH(
             );
         }
 
-        /*
-        ==========================================
-        CALCULATE USD VALUE
-        ==========================================
-        */
+        /* ==========================================
+           CALCULATE USD VALUE
+        ========================================== */
 
+        // Calculate the default USD amount using
+        // the crypto amount and configured FX rate.
         let creditedAmountUSD =
-            originalAmount *
-            fxRate;
+            originalAmount * fxRate;
 
-        /*
-        ==========================================
-        ROUND USD VALUE
-        ==========================================
-        */
+        // If admin entered a custom USD amount,
+        // use that instead of the calculated amount.
+        if (adminApprovedAmount !== undefined) {
+            const customAmount = Number(adminApprovedAmount);
 
+            if (
+                !Number.isFinite(customAmount) ||
+                customAmount <= 0
+            ) {
+                return NextResponse.json(
+                    {
+                        error:
+                            "Please enter a valid approved USD amount.",
+                    },
+                    { status: 400 }
+                );
+            }
+
+            creditedAmountUSD = customAmount;
+        }
+
+        // Round to 2 decimal places.
         creditedAmountUSD =
-            Math.round(
-                creditedAmountUSD *
-                    100
-            ) / 100;
+            Math.round(creditedAmountUSD * 100) / 100;
 
-        /*
-        ==========================================
-        VALIDATE USD VALUE
-        ==========================================
-        */
-
+        // Final validation.
         if (
+            !Number.isFinite(creditedAmountUSD) ||
             creditedAmountUSD <= 0
         ) {
             return NextResponse.json(
                 {
-                    error:
-                        "Invalid USD conversion amount.",
+                    error: "Invalid USD conversion amount.",
                 },
-                {
-                    status: 400,
-                }
+                { status: 400 }
             );
         }
 
@@ -404,11 +428,11 @@ export async function PATCH(
         const endsAt =
             new Date(
                 startedAt.getTime() +
-                    5 *
-                        24 *
-                        60 *
-                        60 *
-                        1000
+                5 *
+                24 *
+                60 *
+                60 *
+                1000
             );
 
         const investment =

@@ -46,11 +46,13 @@ type Payment = {
 
     creditedAmountUSD?: number;
 
+    estimatedAmountUSD?: number | null;
+
     fxRate?: number;
 
     paymentMethodId:
-        | PaymentMethod
-        | null;
+    | PaymentMethod
+    | null;
 
     createdAt: string;
 
@@ -87,6 +89,9 @@ export default function AdminPaymentsPage() {
 
     const [processing, setProcessing] =
         useState(false);
+
+    const [showApprove, setShowApprove] = useState(false);
+    const [approvalAmount, setApprovalAmount] = useState("");
 
     /*
     ==========================================
@@ -141,7 +146,8 @@ export default function AdminPaymentsPage() {
         action:
             | "approve"
             | "decline",
-        declineReason?: string
+        declineReason?: string,
+        creditedAmountUSD?: number
     ) => {
         try {
             setProcessing(true);
@@ -161,6 +167,7 @@ export default function AdminPaymentsPage() {
                         action,
                         reason:
                             declineReason || "",
+                        creditedAmountUSD,
                     }),
                 }
             );
@@ -171,7 +178,7 @@ export default function AdminPaymentsPage() {
             if (!res.ok) {
                 throw new Error(
                     data.error ||
-                        "Failed to review payment."
+                    "Failed to review payment."
                 );
             }
 
@@ -187,7 +194,7 @@ export default function AdminPaymentsPage() {
         } catch (error: any) {
             alert(
                 error.message ||
-                    "Something went wrong."
+                "Something went wrong."
             );
         } finally {
             setProcessing(false);
@@ -200,25 +207,42 @@ export default function AdminPaymentsPage() {
     ==========================================
     */
 
-    const handleApprove = (
-        payment: Payment
-    ) => {
-        const confirmed =
-            window.confirm(
-                `Approve payment of ${formatCryptoAmount(
-                    payment.amount,
-                    payment.currency
-                )}?`
-            );
+    const handleApprove = (payment: Payment) => {
+        setSelectedPayment(payment);
 
-        if (!confirmed) return;
-
-        reviewPayment(
-            payment._id,
-            "approve"
+        setApprovalAmount(
+            payment.estimatedAmountUSD != null
+                ? Number(payment.estimatedAmountUSD).toFixed(2)
+                : ""
         );
+
+        setShowApprove(true);
     };
 
+    const confirmApprove = async () => {
+        if (!selectedPayment) {
+            alert("No payment selected.");
+            return;
+        }
+
+        const amount = Number(approvalAmount);
+
+        if (
+            !approvalAmount.trim() ||
+            !Number.isFinite(amount) ||
+            amount <= 0
+        ) {
+            alert("Please enter a valid USD amount.");
+            return;
+        }
+
+        await reviewPayment(
+            selectedPayment._id,
+            "approve",
+            "",
+            amount
+        );
+    };
     /*
     ==========================================
     OPEN DECLINE
@@ -273,7 +297,7 @@ export default function AdminPaymentsPage() {
     ) => {
         const decimals =
             currency === "BTC" ||
-            currency === "ETH"
+                currency === "ETH"
                 ? 8
                 : 2;
 
@@ -467,7 +491,7 @@ export default function AdminPaymentsPage() {
                             Loading payments...
                         </div>
                     ) : filteredPayments.length ===
-                      0 ? (
+                        0 ? (
                         <div className="empty-state">
                             No payments found.
                         </div>
@@ -573,11 +597,11 @@ export default function AdminPaymentsPage() {
                                                         {payment
                                                             .transactionHash
                                                             ? `${payment.transactionHash.slice(
-                                                                  0,
-                                                                  10
-                                                              )}...${payment.transactionHash.slice(
-                                                                  -8
-                                                              )}`
+                                                                0,
+                                                                10
+                                                            )}...${payment.transactionHash.slice(
+                                                                -8
+                                                            )}`
                                                             : "—"}
                                                     </span>
                                                 </td>
@@ -633,48 +657,48 @@ export default function AdminPaymentsPage() {
 
                                                         {payment.status?.toLowerCase() ===
                                                             "pending" && (
-                                                            <>
-                                                                <button
-                                                                    type="button"
-                                                                    className="icon-btn success"
-                                                                    title="Approve"
-                                                                    disabled={
-                                                                        processing
-                                                                    }
-                                                                    onClick={() =>
-                                                                        handleApprove(
-                                                                            payment
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <Check
-                                                                        size={
-                                                                            17
+                                                                <>
+                                                                    <button
+                                                                        type="button"
+                                                                        className="icon-btn success"
+                                                                        title="Approve"
+                                                                        disabled={
+                                                                            processing
                                                                         }
-                                                                    />
-                                                                </button>
+                                                                        onClick={() =>
+                                                                            handleApprove(
+                                                                                payment
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <Check
+                                                                            size={
+                                                                                17
+                                                                            }
+                                                                        />
+                                                                    </button>
 
-                                                                <button
-                                                                    type="button"
-                                                                    className="icon-btn danger"
-                                                                    title="Decline"
-                                                                    disabled={
-                                                                        processing
-                                                                    }
-                                                                    onClick={() =>
-                                                                        openDecline(
-                                                                            payment
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <X
-                                                                        size={
-                                                                            17
+                                                                    <button
+                                                                        type="button"
+                                                                        className="icon-btn danger"
+                                                                        title="Decline"
+                                                                        disabled={
+                                                                            processing
                                                                         }
-                                                                    />
-                                                                </button>
-                                                            </>
-                                                        )}
+                                                                        onClick={() =>
+                                                                            openDecline(
+                                                                                payment
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <X
+                                                                            size={
+                                                                                17
+                                                                            }
+                                                                        />
+                                                                    </button>
+                                                                </>
+                                                            )}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -830,26 +854,26 @@ export default function AdminPaymentsPage() {
                                         {selectedPayment
                                             .paymentMethodId
                                             ?.walletAddress && (
-                                            <button
-                                                type="button"
-                                                className="copy-btn"
-                                                onClick={() =>
-                                                    copyValue(
-                                                        selectedPayment
-                                                            .paymentMethodId
-                                                            ?.walletAddress ||
+                                                <button
+                                                    type="button"
+                                                    className="copy-btn"
+                                                    onClick={() =>
+                                                        copyValue(
+                                                            selectedPayment
+                                                                .paymentMethodId
+                                                                ?.walletAddress ||
                                                             ""
-                                                    )
-                                                }
-                                                title="Copy wallet address"
-                                            >
-                                                <Copy
-                                                    size={
-                                                        15
+                                                        )
                                                     }
-                                                />
-                                            </button>
-                                        )}
+                                                    title="Copy wallet address"
+                                                >
+                                                    <Copy
+                                                        size={
+                                                            15
+                                                        }
+                                                    />
+                                                </button>
+                                            )}
                                     </div>
                                 </div>
 
@@ -894,7 +918,7 @@ export default function AdminPaymentsPage() {
                                 {selectedPayment.creditedAmountUSD !==
                                     undefined &&
                                     selectedPayment.status ===
-                                        "approved" && (
+                                    "approved" && (
                                         <div>
                                             <span>
                                                 Credited
@@ -913,7 +937,7 @@ export default function AdminPaymentsPage() {
 
                                 {selectedPayment.fxRate &&
                                     selectedPayment.fxRate >
-                                        0 && (
+                                    0 && (
                                         <div>
                                             <span>
                                                 Conversion
@@ -978,50 +1002,50 @@ export default function AdminPaymentsPage() {
 
                             {selectedPayment.status?.toLowerCase() ===
                                 "pending" && (
-                                <div className="modal-actions">
-                                    <button
-                                        type="button"
-                                        className="btn btn-primary"
-                                        disabled={
-                                            processing
-                                        }
-                                        onClick={() =>
-                                            handleApprove(
-                                                selectedPayment
-                                            )
-                                        }
-                                    >
-                                        <Check
-                                            size={
-                                                17
+                                    <div className="modal-actions">
+                                        <button
+                                            type="button"
+                                            className="btn btn-primary"
+                                            disabled={
+                                                processing
                                             }
-                                        />
-
-                                        Approve Payment
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        className="btn btn-danger"
-                                        disabled={
-                                            processing
-                                        }
-                                        onClick={() =>
-                                            openDecline(
-                                                selectedPayment
-                                            )
-                                        }
-                                    >
-                                        <X
-                                            size={
-                                                17
+                                            onClick={() =>
+                                                handleApprove(
+                                                    selectedPayment
+                                                )
                                             }
-                                        />
+                                        >
+                                            <Check
+                                                size={
+                                                    17
+                                                }
+                                            />
 
-                                        Decline
-                                    </button>
-                                </div>
-                            )}
+                                            Approve Payment
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className="btn btn-danger"
+                                            disabled={
+                                                processing
+                                            }
+                                            onClick={() =>
+                                                openDecline(
+                                                    selectedPayment
+                                                )
+                                            }
+                                        >
+                                            <X
+                                                size={
+                                                    17
+                                                }
+                                            />
+
+                                            Decline
+                                        </button>
+                                    </div>
+                                )}
                         </div>
                     </div>
                 )}
@@ -1129,6 +1153,113 @@ export default function AdminPaymentsPage() {
                         </div>
                     </div>
                 )}
+
+
+
+            {/* APPROVE PAYMENT MODAL */}
+
+            {showApprove && selectedPayment && (
+                <div
+                    className="modal-backdrop"
+                    onClick={() => setShowApprove(false)}
+                >
+                    <div
+                        className="modal"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="modal-head">
+                            <div>
+                                <h2>Approve Payment</h2>
+
+                                <p>
+                                    Verify the payment and configure
+                                    the amount to credit to this client.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                className="modal-close"
+                                onClick={() => setShowApprove(false)}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="payment-details">
+                            <div>
+                                <span>Client</span>
+
+                                <strong>
+                                    {selectedPayment.userId?.name || "—"}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Claimed Amount</span>
+
+                                <strong>
+                                    {formatCryptoAmount(
+                                        selectedPayment.amount,
+                                        selectedPayment.currency
+                                    )}
+                                </strong>
+                            </div>
+
+                            <div className="full-detail">
+                                <span>Transaction Hash</span>
+
+                                <strong>
+                                    {selectedPayment.transactionHash || "—"}
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div className="form">
+                            <label>
+                                Amount to Credit (USD)
+                            </label>
+
+                            <input
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                value={approvalAmount}
+                                onChange={(e) => setApprovalAmount(e.target.value)}
+                                placeholder="Calculated amount"
+                            />
+
+                            <small>
+                                Automatically calculated from the submitted crypto amount.
+                                You can change this amount before approving the payment.
+                            </small>
+                        </div>
+                        <div className="modal-actions">
+                            <button
+                                type="button"
+                                className="btn btn-outline"
+                                onClick={() => setShowApprove(false)}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                disabled={processing}
+                                onClick={confirmApprove}
+                            >
+                                <Check size={17} />
+
+                                {processing
+                                    ? "Approving..."
+                                    : "Confirm Approval"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </>
     );
 }
