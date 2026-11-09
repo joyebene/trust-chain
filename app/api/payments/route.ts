@@ -79,8 +79,8 @@ export async function GET() {
             session.role === "admin"
                 ? {}
                 : {
-                      userId: session.id,
-                  };
+                    userId: session.id,
+                };
 
         const payments =
             await Payment.find(query)
@@ -266,6 +266,79 @@ export async function POST(
             type:
                 "payment",
         });
+
+
+        // ==========================================
+        // EMAIL CLIENT - PAYMENT CONFIRMATION
+        // ==========================================
+
+        try {
+            const clientEmail = session.email;
+
+            if (clientEmail) {
+                await sendMail(
+                    clientEmail,
+                    "Payment Submission Confirmation",
+                    `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:30px;color:#333;line-height:1.6;">
+
+                <h2 style="color:#15803d;">
+                    Payment Submitted Successfully
+                </h2>
+
+                <p>Hello ${session.name || "Valued Client"},</p>
+
+                <p>
+                    We have successfully received your payment submission.
+                    Your transaction is currently pending verification by our team.
+                </p>
+
+                <div style="background:#f0fdf4;padding:20px;border-radius:8px;margin:20px 0;">
+
+                    <h3 style="color:#166534;margin-top:0;">
+                        Payment Details
+                    </h3>
+
+                    <p><strong>Amount:</strong> ${payment.amount} ${payment.currency}</p>
+
+                    <p><strong>Network:</strong> ${method.network}</p>
+
+                    <p><strong>Transaction Hash:</strong> ${payment.transactionHash}</p>
+
+                    <p><strong>Status:</strong> Pending Review</p>
+
+                    <p><strong>Submission Date:</strong> ${new Date().toLocaleString("en-NG", {
+                        dateStyle: "long",
+                        timeStyle: "short",
+                    })}</p>
+
+                </div>
+
+                <p>
+                    Our team will review your transaction and update you
+                    once verification is complete.
+                </p>
+
+                <p>
+                    Please keep this email for your records.
+                </p>
+
+                <p>
+                    Regards,<br />
+                    <strong>Trust Chain Support Team</strong>
+                </p>
+
+            </div>
+            `
+                );
+            }
+        } catch (emailError) {
+            console.error(
+                "Client payment confirmation email failed:",
+                emailError
+            );
+        }
+
 
         /*
         ==========================================

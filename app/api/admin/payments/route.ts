@@ -7,6 +7,7 @@ import Payment from "@/models/Payment";
 import User from "@/models/User";
 import Investment from "@/models/Investment";
 import Notification from "@/models/Notification";
+import { sendMail } from "@/lib/email";
 
 function getCryptoUsdRate(currency: string) {
     /*
@@ -32,6 +33,24 @@ function getCryptoUsdRate(currency: string) {
     };
 
     return rates[currency] || 0;
+}
+
+async function sendPaymentEmail(
+    to: string | undefined,
+    subject: string,
+    html: string
+) {
+    if (!to) {
+        console.warn("Payment email skipped: recipient email missing.");
+        return;
+    }
+
+    try {
+        await sendMail(to, subject, html);
+    } catch (error) {
+        // Email failure must not undo an approved or declined payment.
+        console.error("Payment email delivery failed:", error);
+    }
 }
 
 export async function GET() {
@@ -286,6 +305,53 @@ export async function PATCH(
 
                 type: "payment",
             });
+
+            // EMAIL THE CLIENT
+            await sendPaymentEmail(
+                user.email,
+                "Payment Declined",
+                `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:25px;color:#333;">
+        <h2 style="color:#dc2626;">Payment Declined</h2>
+
+        <p>Hello ${user.name || "Valued Client"},</p>
+
+        <p>Unfortunately, your cryptocurrency payment has been declined after review.</p>
+
+        <div style="background:#f9fafb;padding:18px;border-radius:8px;margin:20px 0;">
+            <p><strong>Payment Amount:</strong> ${payment.amount} ${payment.currency}</p>
+            <p><strong>Transaction Hash:</strong> ${payment.transactionHash || "—"}</p>
+            <p><strong>Status:</strong> Declined</p>
+        </div>
+
+        <p><strong>Reason for declining:</strong></p>
+        <p style="color:#dc2626;">${payment.declineReason}</p>
+
+        <p>If you believe this decision was made in error, please contact our support team.</p>
+
+        <p>Regards,<br><strong>Customer Support Team</strong></p>
+    </div>
+    `
+            );
+
+            // EMAIL THE ADMIN
+            await sendPaymentEmail(
+                process.env.ADMIN_EMAIL,
+                "Payment Declined - Admin Notification",
+                `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:25px;color:#333;">
+        <h2>Payment Declined</h2>
+
+        <p>An administrator has declined a payment.</p>
+
+        <p><strong>Client:</strong> ${user.name || "Unknown"}</p>
+        <p><strong>Email:</strong> ${user.email || "—"}</p>
+        <p><strong>Amount:</strong> ${payment.amount} ${payment.currency}</p>
+        <p><strong>Transaction Hash:</strong> ${payment.transactionHash || "—"}</p>
+        <p><strong>Reason:</strong> ${payment.declineReason}</p>
+    </div>
+    `
+            );
 
             return NextResponse.json({
                 message:
@@ -565,6 +631,62 @@ export async function PATCH(
 
             type: "payment",
         });
+
+        // EMAIL THE CLIENT
+        await sendPaymentEmail(
+            user.email,
+            "Payment Approved - Investment Activated",
+            `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:25px;color:#333;">
+        <h2 style="color:#15803d;">Payment Approved!</h2>
+
+        <p>Hello ${user.name || "Valued Client"},</p>
+
+        <p>Good news! Your cryptocurrency payment has been successfully verified and approved.</p>
+
+        <div style="background:#f0fdf4;padding:20px;border-radius:8px;margin:20px 0;">
+            <p><strong>Original Payment:</strong> ${originalAmount} ${currency}</p>
+            <p><strong>Approved USD Amount:</strong> $${creditedAmountUSD.toFixed(2)}</p>
+            <p><strong>Conversion Rate:</strong> ${fxRate.toLocaleString()} USD per ${currency}</p>
+            <p><strong>Transaction Hash:</strong> ${payment.transactionHash || "—"}</p>
+            <p><strong>Payment Status:</strong> Approved</p>
+            <p><strong>Investment Status:</strong> Active</p>
+        </div>
+
+        <p>Your account has been credited with <strong>$${creditedAmountUSD.toFixed(2)} USD</strong>, and an investment has been created successfully.</p>
+
+        <p>You can log in to your account to view your updated balance and investment details.</p>
+
+        <p>Thank you for choosing us.</p>
+
+        <p>Regards,<br><strong>Customer Support Team</strong></p>
+    </div>
+    `
+        );
+
+        // EMAIL THE ADMIN
+        await sendPaymentEmail(
+            process.env.ADMIN_EMAIL,
+            "Payment Approved - Admin Notification",
+            `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:25px;color:#333;">
+        <h2 style="color:#15803d;">Payment Successfully Approved</h2>
+
+        <p>A client payment has been approved and credited.</p>
+
+        <div style="background:#f9fafb;padding:20px;border-radius:8px;">
+            <p><strong>Client:</strong> ${user.name || "Unknown"}</p>
+            <p><strong>Client Email:</strong> ${user.email || "—"}</p>
+            <p><strong>Original Amount:</strong> ${originalAmount} ${currency}</p>
+            <p><strong>Credited USD:</strong> $${creditedAmountUSD.toFixed(2)}</p>
+            <p><strong>FX Rate:</strong> ${fxRate.toLocaleString()}</p>
+            <p><strong>Transaction Hash:</strong> ${payment.transactionHash || "—"}</p>
+            <p><strong>Investment ID:</strong> ${investment._id}</p>
+            <p><strong>Payment Status:</strong> Approved</p>
+        </div>
+    </div>
+    `
+        );
 
         /*
         ==========================================

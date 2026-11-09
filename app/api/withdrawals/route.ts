@@ -7,6 +7,7 @@ import { getSession } from "@/lib/auth";
 import User from "@/models/User";
 import Withdrawal from "@/models/Withdrawal";
 import Notification from "@/models/Notification";
+import { sendMail } from "@/lib/email";
 
 const withdrawalSchema = z.object({
     amountUSD: z
@@ -60,6 +61,17 @@ const withdrawalActionSchema = z.object({
         .max(300)
         .optional(),
 });
+
+function escapeHtml(value: unknown) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+    })[char]!);
+}
+
 
 /**
  * GET
@@ -186,6 +198,47 @@ export async function POST(req: Request) {
                 }
             );
         }
+
+        // ==========================================
+        // ENFORCE 14-DAY WITHDRAWAL INTERVAL
+        // ==========================================
+
+        const WITHDRAWAL_INTERVAL =
+            14 * 24 * 60 * 60 * 1000;
+
+        // Find the most recent withdrawal request,
+        // regardless of its status.
+        const lastWithdrawal = await Withdrawal.findOne({
+            userId: session.id,
+        })
+            .sort({ createdAt: -1 })
+            .select("createdAt");
+
+        if (lastWithdrawal) {
+            const nextAvailableDate =
+                new Date(
+                    lastWithdrawal.createdAt.getTime() +
+                    WITHDRAWAL_INTERVAL
+                );
+
+            const remainingTime =
+                nextAvailableDate.getTime() - Date.now();
+
+            if (remainingTime > 0) {
+                return NextResponse.json(
+                    {
+                        error:
+                            "You can only make a withdrawal request once every 14 days.",
+                        nextAvailableAt: nextAvailableDate,
+                        remainingMilliseconds: remainingTime,
+                    },
+                    {
+                        status: 429,
+                    }
+                );
+            }
+        }
+
 
         // ==========================================
         // CHECK EXISTING PENDING WITHDRAWAL
@@ -346,7 +399,7 @@ export async function POST(req: Request) {
             await User.find({
                 role: "admin",
                 isActive: true,
-            }).select("_id");
+            }).select("_id name email");
 
         // ==========================================
         // NOTIFY ADMINS
@@ -371,6 +424,105 @@ export async function POST(req: Request) {
                     read: false,
                 }))
             );
+        }
+
+        // ==========================================
+        // EMAIL NOTIFICATION DETAILS
+        // ==========================================
+
+        const safeName = escapeHtml(user.name);
+        const safeEmail = escapeHtml(user.email);
+        const safeAmountUSD = escapeHtml(amountUSD.toFixed(2));
+        const safePayoutAmount = escapeHtml(data.payoutAmount);
+        const safeCurrency = escapeHtml(data.currency);
+        const safeNetwork = escapeHtml(data.network);
+        const safeWalletAddress = escapeHtml(data.walletAddress);
+        const safeNote = escapeHtml(data.note || "No additional note");
+
+        // ==========================================
+        // EMAIL USER: WITHDRAWAL SUBMITTED
+        // ==========================================
+
+        try {
+            await sendMail(
+                user.email,
+                "Withdrawal Request Submitted",
+                `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:30px;color:#333;line-height:1.6;">
+            <h2 style="color:#15803d;">Withdrawal Request Received</h2>
+
+            <p>Hello ${safeName},</p>
+
+            <p>Your withdrawal request has been successfully submitted and is now awaiting review by our administration team.</p>
+
+            <div style="background:#f0fdf4;padding:20px;border-radius:8px;margin:20px 0;">
+                <h3 style="color:#166534;margin-top:0;">Withdrawal Details</h3>
+
+                <p><strong>Amount:</strong> $${safeAmountUSD} USD</p>
+                <p><strong>Payout Amount:</strong> ${safePayoutAmount} ${safeCurrency}</p>
+                <p><strong>Network:</strong> ${safeNetwork}</p>
+                <p><strong>Wallet Address:</strong> ${safeWalletAddress}</p>
+                <p><strong>Status:</strong> Pending Approval</p>
+            </div>
+
+            <p>Your withdrawal amount has already been deducted from your available account balance while the request is being reviewed.</p>
+
+            <p>We will notify you when there is an update on your withdrawal.</p>
+
+            <p>Thank you for using our platform.</p>
+
+            <p>Regards,<br><strong>Customer Support Team</strong></p>
+        </div>
+        `
+            );
+        } catch (error) {
+            console.error("User withdrawal email failed:", error);
+        }
+
+        // ==========================================
+        // EMAIL ADMINS: NEW WITHDRAWAL REQUEST
+        // ==========================================
+
+        for (const admin of admins) {
+            if (!admin.email) continue;
+
+            try {
+                await sendMail(
+                    admin.email,
+                    "New Withdrawal Request - Admin Review Required",
+                    `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:30px;color:#333;line-height:1.6;">
+                <h2 style="color:#15803d;">New Withdrawal Request</h2>
+
+                <p>A user has submitted a new withdrawal request. Please review it in your administration dashboard.</p>
+
+                <div style="background:#f9fafb;padding:20px;border-radius:8px;margin:20px 0;">
+                    <h3 style="margin-top:0;">User Information</h3>
+
+                    <p><strong>Name:</strong> ${safeName}</p>
+                    <p><strong>Email:</strong> ${safeEmail}</p>
+                    <p><strong>Phone:</strong> ${escapeHtml(user.phone || "Not provided")}</p>
+
+                    <h3>Withdrawal Information</h3>
+
+                    <p><strong>Amount in USD:</strong> $${safeAmountUSD}</p>
+                    <p><strong>Payout Amount:</strong> ${safePayoutAmount} ${safeCurrency}</p>
+                    <p><strong>Network:</strong> ${safeNetwork}</p>
+                    <p><strong>Wallet Address:</strong> ${safeWalletAddress}</p>
+                    <p><strong>User Note:</strong> ${safeNote}</p>
+                    <p><strong>Status:</strong> Pending</p>
+                </div>
+
+                <p>Please log in to your administration dashboard to review and process this withdrawal.</p>
+            </div>
+            `
+                );
+            } catch (error) {
+                console.error(
+                    `Withdrawal notification failed for admin ${admin.email}:`,
+                    error
+                );
+            }
         }
 
         // ==========================================

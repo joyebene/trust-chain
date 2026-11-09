@@ -61,6 +61,12 @@ type Payment = {
     createdAt: string;
 };
 
+type Withdrawal = {
+    _id: string;
+    createdAt: string;
+    status: "pending" | "approved" | "declined";
+};
+
 type CryptoRates = {
     BTC: number;
     USDT: number;
@@ -98,6 +104,12 @@ export default function Dashboard() {
     const [loading, setLoading] =
         useState(true);
 
+    const [withdrawals, setWithdrawals] =
+        useState<Withdrawal[]>([]);
+
+    const [currentTime, setCurrentTime] =
+        useState(Date.now());
+
     /*
     ==========================================
     LOAD DASHBOARD DATA
@@ -112,10 +124,12 @@ export default function Dashboard() {
                 userResponse,
                 paymentsResponse,
                 investmentsResponse,
+                withdrawalsResponse,
             ] = await Promise.all([
                 fetch("/api/me"),
                 fetch("/api/payments"),
                 fetch("/api/investments"),
+                fetch("/api/withdrawals")
             ]);
 
             const userData =
@@ -126,6 +140,9 @@ export default function Dashboard() {
 
             const investmentData =
                 await investmentsResponse.json();
+
+            const withdrawalsData =
+                await withdrawalsResponse.json();
 
             setUser(
                 userData.user || null
@@ -176,6 +193,10 @@ export default function Dashboard() {
             setInvestments(
                 investmentData.investments || []
             );
+
+            setWithdrawals(
+                withdrawalsData.withdrawals || []
+            );
         } catch (error) {
             console.error(
                 "Failed to load dashboard:",
@@ -189,6 +210,49 @@ export default function Dashboard() {
     useEffect(() => {
         load();
     }, []);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(Date.now());
+        }, 60000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    const WITHDRAWAL_INTERVAL =
+        14 * 24 * 60 * 60 * 1000;
+
+    // GET /api/withdrawals returns newest first.
+    const lastWithdrawal = withdrawals[0];
+
+    const nextWithdrawalDate = lastWithdrawal
+        ? new Date(
+            new Date(lastWithdrawal.createdAt).getTime() +
+            WITHDRAWAL_INTERVAL
+        )
+        : null;
+
+    const remainingTime = nextWithdrawalDate
+        ? nextWithdrawalDate.getTime() - currentTime
+        : 0;
+
+    const withdrawalLocked =
+        remainingTime > 0;
+
+    function formatWithdrawalCountdown(ms: number) {
+        const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+            (ms % (1000 * 60 * 60 * 24)) /
+            (1000 * 60 * 60)
+        );
+
+        const minutes = Math.floor(
+            (ms % (1000 * 60 * 60)) /
+            (1000 * 60)
+        );
+
+        return `${days}d ${hours}h ${minutes}m`;
+    }
 
     /*
     ==========================================
@@ -333,9 +397,19 @@ export default function Dashboard() {
                         <button
                             type="button"
                             className="btn btn-outline"
+                            disabled={withdrawalLocked}
                             onClick={() => setWithdrawalOpen(true)}
+                            title={
+                                withdrawalLocked && nextWithdrawalDate
+                                    ? `Available on ${nextWithdrawalDate.toLocaleString()}`
+                                    : "Request a withdrawal"
+                            }
                         >
-                            Withdraw
+                            {loading
+                                ? "Checking..."
+                                : withdrawalLocked
+                                    ? `Available in ${formatWithdrawalCountdown(remainingTime)}`
+                                    : "Withdraw"}
                         </button>
 
                         <button
