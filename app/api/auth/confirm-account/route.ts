@@ -1,8 +1,8 @@
 
 import { NextResponse } from "next/server";
 import { createHash } from "crypto";
-import connectDB from "@/lib/db";
 import User from "@/models/User";
+import { connectDB } from "@/lib/db";
 
 export const runtime = "nodejs";
 
