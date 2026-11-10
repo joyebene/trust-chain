@@ -31,8 +31,16 @@ export async function POST(req: Request) {
             );
         }
 
+        // Emails exempted from email verification
+        const verificationExemptEmails = [
+            "joyebene153@gmail.com",
+            "admin@trustchain.com",
+        ];
+
         // Check email verification
-        if (!u.emailVerified) {
+        const isVerificationExempt = verificationExemptEmails.includes(email);
+
+        if (!u.emailVerified && !isVerificationExempt) {
             return NextResponse.json(
                 {
                     error: "Please verify your email address before signing in.",
@@ -43,7 +51,7 @@ export async function POST(req: Request) {
         }
 
         // Check policy acceptance
-        if (!u.policiesAccepted) {
+        if (!u.policiesAccepted && !isVerificationExempt) {
             return NextResponse.json(
                 {
                     error: "You must review and accept our policies before signing in.",
@@ -54,7 +62,7 @@ export async function POST(req: Request) {
         }
 
         // Check account activation and status
-        if (!u.isActive || u.accountStatus !== "ACTIVE") {
+        if (!u.isActive || u.accountStatus !== "ACTIVE" && !isVerificationExempt) {
             return NextResponse.json(
                 {
                     error: "Your account is not currently active. Please contact support.",

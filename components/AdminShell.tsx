@@ -116,7 +116,7 @@ export default function AdminShell({
                         className="admin-logo"
                     />
 
-                    <div style={{ display: "flex", flexDirection: "column", color: "black" }}>
+                    <div className="admin-brand-text">
                         <h2>Trust Chain</h2>
                         <span>Admin Panel</span>
                     </div>

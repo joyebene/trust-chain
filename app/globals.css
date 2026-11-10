@@ -2846,6 +2846,77 @@ td small {
     flex-shrink: 0;
 }
 
+/* Navigation container */
+.admin-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+}
+
+/* Section headings */
+.admin-nav-title {
+    margin: 22px 0 8px;
+    padding: 0 12px;
+    color: #c99a2e;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+}
+
+/* Navigation links */
+.admin-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 8px;
+
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+
+    background: transparent;
+    border: 1px solid transparent;
+
+    transition: all 0.2s ease;
+}
+
+.admin-nav-link span {
+    color: inherit;
+}
+
+.admin-nav-link svg {
+    flex-shrink: 0;
+    color: #aaa69c;
+    transition: color 0.2s ease;
+}
+
+/* Hover */
+.admin-nav-link:hover {
+    background: rgba(201, 154, 46, 0.10);
+    color: #e7bd55;
+}
+
+.admin-nav-link:hover svg {
+    color: #e7bd55;
+}
+
+/* Active link */
+.admin-nav-link.active {
+    background: rgba(201, 154, 46, 0.15);
+    color: #e7bd55;
+    border-color: rgba(201, 154, 46, 0.25);
+    font-weight: 700;
+}
+
+.admin-nav-link.active svg {
+    color: #e7bd55;
+}
+
+/* Notification count */
 .admin-nav-link em {
     margin-left: auto;
     min-width: 20px;
@@ -2857,16 +2928,15 @@ td small {
     justify-content: center;
 
     border-radius: 999px;
-
-    background: #e31b23;
-    color: #ffffff;
+    background: #c99a2e;
+    color: #11110f;
 
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 800;
     font-style: normal;
     line-height: 1;
 
-    box-shadow: 0 0 0 2px #ffffff;
+    box-shadow: none;
 }
 
 @media (max-width: 600px) {
@@ -3454,6 +3524,20 @@ td small {
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 1px;
+}
+
+.admin-brand-text {
+    display: flex;
+    flex-direction: column;
+    color: #ffffff;
+}
+
+.admin-brand-text h2 {
+    color: #ffffff;
+}
+
+.admin-brand-text span {
+    color: #c99a2e;
 }
 
 /* Policy table of contents */
