@@ -148,12 +148,53 @@ export async function POST(req: Request) {
                     <p><strong>Account Status:</strong> Pending Verification</p>
                 </div>
 
-                <div style="text-align:center;margin:30px 0;">
-                    <a href="${confirmationUrl}"
-                       style="background:#d4af37;color:#111;text-decoration:none;padding:14px 28px;border-radius:6px;font-weight:bold;display:inline-block;">
-                        Verify My Email
-                    </a>
-                </div>
+             <table
+    role="presentation"
+    border="0"
+    cellpadding="0"
+    cellspacing="0"
+    width="100%"
+    style="margin:30px 0;"
+>
+    <tr>
+        <td align="center">
+            <table
+                role="presentation"
+                border="0"
+                cellpadding="0"
+                cellspacing="0"
+            >
+                <tr>
+                    <td
+                        align="center"
+                        bgcolor="#c99a2e"
+                        style="border-radius:6px;"
+                    >
+                        <a
+                            href="${confirmationUrl}"
+                            target="_blank"
+                            style="
+                                display:inline-block;
+                                padding:16px 32px;
+                                font-family:Arial,sans-serif;
+                                font-size:15px;
+                                font-weight:bold;
+                                line-height:20px;
+                                color:#11110f;
+                                text-decoration:none;
+                                border-radius:6px;
+                                text-align:center;
+                                mso-padding-alt:0;
+                            "
+                        >
+                            Verify My Email
+                        </a>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
 
                 <p style="font-size:13px;color:#666;text-align:center;margin-top:15px;">
     If the button above does not work, copy and open this link in your browser:
