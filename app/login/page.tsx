@@ -186,7 +186,7 @@ export default function Login() {
                     <Link href="/register">Create an account</Link>
                 </div>
 
-                <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mt-5">
+                <div className="security-message">
                     <ShieldCheck size={15} />
                     Your account is protected by secure authentication.
                 </div>

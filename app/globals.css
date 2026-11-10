@@ -3691,6 +3691,36 @@ td small {
     margin-top: 25px;
 }
 
+.security-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    margin-top: 22px;
+    padding: 13px 16px;
+    border: 1px solid rgba(201, 154, 46, 0.2);
+    border-radius: 8px;
+    background: rgba(201, 154, 46, 0.06);
+    color: #77736a;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.security-message svg {
+    flex-shrink: 0;
+    color: #c99a2e;
+}
+
+@media (max-width: 480px) {
+    .security-message {
+        font-size: 11px;
+        padding: 12px 10px;
+        gap: 7px;
+    }
+}
+
 /* Mobile layout */
 
 @media (max-width: 650px) {
