@@ -109,6 +109,46 @@ const UserSchema = new Schema(
             type: Boolean,
             default: true,
         },
+
+
+        emailVerified: {
+            type: Boolean,
+            default: false,
+        },
+
+        policiesAccepted: {
+            type: Boolean,
+            default: false,
+        },
+
+        policiesAcceptedAt: {
+            type: Date,
+            default: null,
+        },
+
+        policyVersions: {
+            privacyPolicy: String,
+            refundPolicy: String,
+            withdrawalPolicy: String,
+            termsAndConditions: String,
+        },
+
+        accountStatus: {
+            type: String,
+            enum: ["PENDING", "ACTIVE", "SUSPENDED"],
+            default: "PENDING",
+        },
+
+        emailVerificationToken: {
+            type: String,
+            default: null,
+        },
+
+        emailVerificationExpires: {
+            type: Date,
+            default: null,
+        },
+
     },
     {
         timestamps: true,

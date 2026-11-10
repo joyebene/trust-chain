@@ -51,7 +51,7 @@ export default function Register() {
 
       if (!r.ok) throw new Error(d.error || "Unable to register");
 
-      router.push("/dashboard");
+      router.push(`/check-email?email=${encodeURIComponent(form.email)}`);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Something went wrong"

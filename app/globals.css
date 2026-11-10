@@ -2993,6 +2993,263 @@ td small {
     }
 }
 
+
+/* ACCOUNT CONFIRMATION PAGE */
+
+.confirmation-card {
+    max-width: 570px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.confirmation-top-icon,
+.confirmation-success-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    background: rgba(198, 158, 70, 0.12);
+    color: #c49a46;
+}
+
+.confirmation-success-icon {
+    width: 76px;
+    height: 76px;
+}
+
+.confirmation-notice,
+.confirmation-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px;
+    border: 1px solid rgba(196, 154, 70, 0.25);
+    border-radius: 10px;
+    background: rgba(196, 154, 70, 0.07);
+    margin: 22px 0;
+}
+
+.confirmation-notice>svg,
+.confirmation-info>svg {
+    flex-shrink: 0;
+    color: #c49a46;
+}
+
+.confirmation-notice strong,
+.confirmation-info strong {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.confirmation-notice p,
+.confirmation-info p {
+    font-size: 12px;
+    line-height: 1.7;
+    opacity: 0.75;
+    margin: 0;
+}
+
+.policy-section {
+    margin: 26px 0 20px;
+}
+
+.policy-section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 13px;
+}
+
+.policy-section-heading h3 {
+    font-size: 15px;
+    margin: 0 0 4px;
+}
+
+.policy-section-heading p {
+    font-size: 12px;
+    opacity: 0.65;
+    margin: 0;
+}
+
+.policy-count {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    color: #c49a46;
+    white-space: nowrap;
+}
+
+.policy-document-list {
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.policy-document {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+}
+
+.policy-document:last-child {
+    border-bottom: none;
+}
+
+.policy-file-icon {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(196, 154, 70, 0.1);
+    color: #c49a46;
+}
+
+.policy-document-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.policy-document-info strong {
+    font-size: 13px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.policy-document-info p {
+    font-size: 11px;
+    line-height: 1.5;
+    opacity: 0.65;
+    margin: 0;
+}
+
+.policy-read-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: #c49a46;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.policy-read-link:hover {
+    text-decoration: underline;
+}
+
+.confirmation-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid rgba(196, 154, 70, 0.3);
+    border-radius: 10px;
+    cursor: pointer;
+    margin: 20px 0;
+    background: rgba(196, 154, 70, 0.04);
+}
+
+.confirmation-checkbox input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.custom-check {
+    width: 19px;
+    height: 19px;
+    flex-shrink: 0;
+    border: 1.5px solid #b99a5b;
+    border-radius: 4px;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.confirmation-checkbox input:checked+.custom-check {
+    background: #c49a46;
+    border-color: #c49a46;
+}
+
+.confirmation-checkbox input:checked+.custom-check::after {
+    content: "✓";
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.confirmation-checkbox input:focus-visible+.custom-check {
+    outline: 2px solid #c49a46;
+    outline-offset: 3px;
+}
+
+.confirmation-checkbox-text {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.confirmation-checkbox-text strong {
+    font-size: 13px;
+}
+
+.confirmation-checkbox-text small {
+    font-size: 11px;
+    line-height: 1.7;
+    opacity: 0.7;
+}
+
+.confirmation-proceed {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 9px;
+}
+
+.confirmation-proceed:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.confirmation-security {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    margin-top: 16px;
+    font-size: 11px;
+    opacity: 0.6;
+}
+
+@media (max-width: 480px) {
+    .policy-document {
+        padding: 12px 10px;
+        gap: 9px;
+    }
+
+    .policy-document-info p {
+        font-size: 10px;
+    }
+
+    .policy-read-link {
+        font-size: 11px;
+    }
+
+    .policy-count {
+        font-size: 9px;
+    }
+}
+
+
 /* MOBILE */
 @media (max-width: 640px) {
     .admin-mobile-header {
