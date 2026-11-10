@@ -155,6 +155,20 @@ export async function POST(req: Request) {
                     </a>
                 </div>
 
+                <p style="font-size:13px;color:#666;text-align:center;margin-top:15px;">
+    If the button above does not work, copy and open this link in your browser:
+</p>
+
+<p style="font-size:12px;text-align:center;word-break:break-all;">
+    <a
+        href="${confirmationUrl}"
+        target="_blank"
+        style="color:#9b741c;text-decoration:underline;"
+    >
+        ${confirmationUrl}
+    </a>
+</p>
+
                 <p>After clicking the button, you will be asked to review:</p>
 
                 <ul>
