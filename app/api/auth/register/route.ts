@@ -95,10 +95,10 @@ export async function POST(req: Request) {
 
         createdUserId = u._id.toString();
 
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+        const baseUrl = process.env.NEXT_APP_URL;
 
         if (!baseUrl) {
-            throw new Error("NEXT_PUBLIC_APP_URL is not configured.");
+            throw new Error("NEXT_APP_URL is not configured.");
         }
 
         const confirmationUrl =
