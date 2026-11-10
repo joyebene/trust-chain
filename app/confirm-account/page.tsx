@@ -14,13 +14,12 @@ import {
     FileText,
     AlertCircle,
     MailCheck,
-    ChevronDown,
+    ChevronRight,
 } from "lucide-react";
 
 function ConfirmAccountContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-
     const token = searchParams.get("token");
 
     const [accepted, setAccepted] = useState(false);
@@ -132,7 +131,7 @@ function ConfirmAccountContent() {
     }
 
     return (
-        <main className="auth-shell">
+        <main className="auth-shell confirmation-shell">
             <div className="auth-brand">
                 <Link href="/" className="brand">
                     <Image
@@ -172,35 +171,72 @@ function ConfirmAccountContent() {
                     </div>
                 </div>
 
+                {/* POLICY NAVIGATION */}
                 <div className="policy-section">
                     <div className="policy-section-heading">
                         <div>
                             <h3>Trust Chain Policies</h3>
-                            <p>Four important documents to review.</p>
+                            <p>
+                                Please take a moment to review each document.
+                            </p>
                         </div>
 
                         <span className="policy-count">04 DOCUMENTS</span>
                     </div>
 
+                    <nav className="policy-navigation" aria-label="Policy documents">
+                        <a href="#privacy-policy">
+                            <span>01</span>
+                            Privacy Policy
+                            <ChevronRight size={16} />
+                        </a>
+
+                        <a href="#refund-policy">
+                            <span>02</span>
+                            Refund Policy
+                            <ChevronRight size={16} />
+                        </a>
+
+                        <a href="#withdrawal-policy">
+                            <span>03</span>
+                            Withdrawal Policy
+                            <ChevronRight size={16} />
+                        </a>
+
+                        <a href="#terms-conditions">
+                            <span>04</span>
+                            Terms & Conditions
+                            <ChevronRight size={16} />
+                        </a>
+                    </nav>
+
+                    <div className="policy-reading-hint">
+                        <FileText size={16} />
+                        All four documents are displayed below. You can use
+                        the links above to move directly to any section.
+                    </div>
+
                     <div className="policy-document-list">
 
                         {/* PRIVACY POLICY */}
-                        <details className="policy-document">
-                            <summary className="policy-summary">
+                        <section
+                            className="policy-document"
+                            id="privacy-policy"
+                        >
+                            <div className="policy-summary">
                                 <div className="policy-file-icon">
-                                    <FileText size={20} />
+                                    <FileText size={21} />
                                 </div>
 
                                 <div className="policy-document-info">
-                                    <strong>1. Privacy Policy</strong>
+                                    <span className="policy-number">DOCUMENT 01</span>
+                                    <h3>Privacy Policy</h3>
                                     <p>
                                         How we collect, use and protect your
                                         personal information.
                                     </p>
                                 </div>
-
-                                <ChevronDown className="policy-chevron" size={19} />
-                            </summary>
+                            </div>
 
                             <div className="policy-content">
                                 <h4>1. Introduction</h4>
@@ -282,25 +318,27 @@ function ConfirmAccountContent() {
                                     on our platform.
                                 </p>
                             </div>
-                        </details>
+                        </section>
 
                         {/* REFUND POLICY */}
-                        <details className="policy-document">
-                            <summary className="policy-summary">
+                        <section
+                            className="policy-document"
+                            id="refund-policy"
+                        >
+                            <div className="policy-summary">
                                 <div className="policy-file-icon">
-                                    <FileText size={20} />
+                                    <FileText size={21} />
                                 </div>
 
                                 <div className="policy-document-info">
-                                    <strong>2. Refund Policy</strong>
+                                    <span className="policy-number">DOCUMENT 02</span>
+                                    <h3>Refund Policy</h3>
                                     <p>
                                         Conditions and procedures relating
                                         to refund requests.
                                     </p>
                                 </div>
-
-                                <ChevronDown className="policy-chevron" size={19} />
-                            </summary>
+                            </div>
 
                             <div className="policy-content">
                                 <h4>1. Purpose</h4>
@@ -380,25 +418,27 @@ function ConfirmAccountContent() {
                                     available under applicable law.
                                 </p>
                             </div>
-                        </details>
+                        </section>
 
                         {/* WITHDRAWAL POLICY */}
-                        <details className="policy-document">
-                            <summary className="policy-summary">
+                        <section
+                            className="policy-document"
+                            id="withdrawal-policy"
+                        >
+                            <div className="policy-summary">
                                 <div className="policy-file-icon">
-                                    <FileText size={20} />
+                                    <FileText size={21} />
                                 </div>
 
                                 <div className="policy-document-info">
-                                    <strong>3. Withdrawal Policy</strong>
+                                    <span className="policy-number">DOCUMENT 03</span>
+                                    <h3>Withdrawal Policy</h3>
                                     <p>
                                         Procedures and requirements for
                                         withdrawing available funds.
                                     </p>
                                 </div>
-
-                                <ChevronDown className="policy-chevron" size={19} />
-                            </summary>
+                            </div>
 
                             <div className="policy-content">
                                 <h4>1. Overview</h4>
@@ -489,25 +529,27 @@ function ConfirmAccountContent() {
                                     relevant details.
                                 </p>
                             </div>
-                        </details>
+                        </section>
 
                         {/* TERMS AND CONDITIONS */}
-                        <details className="policy-document">
-                            <summary className="policy-summary">
+                        <section
+                            className="policy-document"
+                            id="terms-conditions"
+                        >
+                            <div className="policy-summary">
                                 <div className="policy-file-icon">
-                                    <FileText size={20} />
+                                    <FileText size={21} />
                                 </div>
 
                                 <div className="policy-document-info">
-                                    <strong>4. Terms & Conditions</strong>
+                                    <span className="policy-number">DOCUMENT 04</span>
+                                    <h3>Terms & Conditions</h3>
                                     <p>
                                         The rules governing your use of
                                         Trust Chain.
                                     </p>
                                 </div>
-
-                                <ChevronDown className="policy-chevron" size={19} />
-                            </summary>
+                            </div>
 
                             <div className="policy-content">
                                 <h4>1. Agreement to Terms</h4>
@@ -640,64 +682,78 @@ function ConfirmAccountContent() {
                                     published on our website.
                                 </p>
                             </div>
-                        </details>
+                        </section>
                     </div>
                 </div>
 
-                {error && (
-                    <div className="alert error">
-                        <AlertCircle size={17} />
-                        {error}
+                {/* ACCEPTANCE */}
+                <div className="confirmation-acceptance">
+                    <div className="confirmation-acceptance-heading">
+                        <ShieldCheck size={20} />
+                        <div>
+                            <h3>Policy Acknowledgement</h3>
+                            <p>
+                                Please confirm your agreement after reviewing
+                                all four documents.
+                            </p>
+                        </div>
                     </div>
-                )}
 
-                <label className="confirmation-checkbox">
-                    <input
-                        type="checkbox"
-                        checked={accepted}
-                        onChange={(e) => {
-                            setAccepted(e.target.checked);
-                            setError("");
-                        }}
-                    />
-
-                    <span className="custom-check"></span>
-
-                    <span className="confirmation-checkbox-text">
-                        <strong>
-                            I have read and understand the procedures.
-                        </strong>
-                        <small>
-                            I confirm that I have reviewed and understood
-                            the Privacy Policy, Refund Policy, Withdrawal
-                            Policy and Terms & Conditions, and agree to
-                            be bound by the applicable terms.
-                        </small>
-                    </span>
-                </label>
-
-                <button
-                    type="button"
-                    onClick={handleProceed}
-                    disabled={loading || !accepted || !token}
-                    className="btn btn-gold btn-block confirmation-proceed"
-                >
-                    {loading ? (
-                        <>
-                            <Loader2 size={18} className="spin" />
-                            Confirming your account...
-                        </>
-                    ) : (
-                        <>
-                            <ShieldCheck size={18} />
-                            Proceed to activate account
-                        </>
+                    {error && (
+                        <div className="alert error">
+                            <AlertCircle size={17} />
+                            {error}
+                        </div>
                     )}
-                </button>
 
-                <div className="confirmation-security">
-                    <LockKeyhole size={14} />
-                    Your confirmation is securely processed.
+                    <label className="confirmation-checkbox">
+                        <input
+                            type="checkbox"
+                            checked={accepted}
+                            onChange={(e) => {
+                                setAccepted(e.target.checked);
+                                setError("");
+                            }}
+                        />
+
+                        <span className="custom-check"></span>
+
+                        <span className="confirmation-checkbox-text">
+                            <strong>
+                                I have read and understand the procedures.
+                            </strong>
+                            <small>
+                                I confirm that I have reviewed and understood
+                                the Privacy Policy, Refund Policy, Withdrawal
+                                Policy and Terms & Conditions, and agree to
+                                be bound by the applicable terms.
+                            </small>
+                        </span>
+                    </label>
+
+                    <button
+                        type="button"
+                        onClick={handleProceed}
+                        disabled={loading || !accepted || !token}
+                        className="btn btn-gold btn-block confirmation-proceed"
+                    >
+                        {loading ? (
+                            <>
+                                <Loader2 size={18} className="spin" />
+                                Confirming your account...
+                            </>
+                        ) : (
+                            <>
+                                <ShieldCheck size={18} />
+                                Proceed to activate account
+                            </>
+                        )}
+                    </button>
+
+                    <div className="confirmation-security">
+                        <LockKeyhole size={14} />
+                        Your confirmation is securely processed.
+                    </div>
                 </div>
 
                 <Link href="/" className="back-link">
