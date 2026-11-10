@@ -35,6 +35,7 @@ function hashToken(token: string) {
 
 export async function POST(req: Request) {
     let createdUserId: string | null = null;
+    let stage = "Starting registration";
 
     try {
         const data = schema.parse(await req.json());
@@ -95,11 +96,20 @@ export async function POST(req: Request) {
 
         createdUserId = u._id.toString();
 
+
+        stage = "Checking application URL";
         const baseUrl = process.env.NEXT_APP_URL;
 
         if (!baseUrl) {
             throw new Error("NEXT_APP_URL is not configured.");
         }
+
+        stage = "Sending verification email";
+        // Keep your existing sendMail call here
+
+        stage = "Sending admin notification";
+        // Keep your existing admin notification here
+
 
         const confirmationUrl =
             `${baseUrl.replace(/\/$/, "")}/confirm-account?token=${verificationToken}`;
@@ -210,9 +220,9 @@ export async function POST(req: Request) {
         );
 
     } catch (e) {
-        console.error("Registration error:", e);
+        console.error("Registration failed at:", stage);
+        console.error("Registration error details:", e);
 
-        // Delete the pending account if the verification email could not be sent
         if (createdUserId) {
             try {
                 await User.findByIdAndDelete(createdUserId);
@@ -229,7 +239,10 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json(
-            { error: "Unable to create account. Please try again." },
+            {
+                error: "Unable to create account. Please try again.",
+                stage: process.env.NODE_ENV === "development" ? stage : undefined,
+            },
             { status: 500 }
         );
     }
