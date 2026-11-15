@@ -1,14 +1,14 @@
 
+import "dotenv/config";
 import mongoose from "mongoose";
-import { connectDB } from "@/lib/db";
-import User from "@/models/User";
+import { connectDB } from "../lib/db";
+import User from "../models/User";
 
 async function migrateExistingUsers() {
     try {
         console.log("Connecting to database...");
         await connectDB();
 
-        // Update existing users who have not completed the new checks.
         const result = await User.updateMany(
             {
                 $or: [

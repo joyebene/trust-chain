@@ -2885,12 +2885,12 @@ td small {
 }
 
 .admin-nav-link span {
-    color: inherit;
+    color: #e3e2e0;
 }
 
 .admin-nav-link svg {
     flex-shrink: 0;
-    color: #aaa69c;
+    color: #cbc4b2;
     transition: color 0.2s ease;
 }
 
@@ -2907,7 +2907,7 @@ td small {
 /* Active link */
 .admin-nav-link.active {
     background: rgba(201, 154, 46, 0.15);
-    color: #e7bd55;
+    color: #e4e0d5;
     border-color: rgba(201, 154, 46, 0.25);
     font-weight: 700;
 }

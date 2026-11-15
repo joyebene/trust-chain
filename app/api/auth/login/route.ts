@@ -61,7 +61,7 @@ export async function POST(req: Request) {
         }
 
         // Check account activation and status
-        if (!u.isActive || u.accountStatus !== "ACTIVE" && !isVerificationExempt) {
+        if (!u.isActive && !isVerificationExempt) {
             return NextResponse.json(
                 {
                     error: "Your account is not currently active. Please contact support.",
