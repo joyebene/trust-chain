@@ -33,7 +33,6 @@ export async function POST(req: Request) {
 
         // Emails exempted from email verification
         const verificationExemptEmails = [
-            "joyebene153@gmail.com",
             "admin@trustchain.com",
         ];
 
