@@ -1,6 +1,10 @@
-/* @import "tailwindcss"; */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+    --font-sans: var(--font-dm-sans);
+    --font-heading: var(--font-manrope);
+}
 
 :root {
     --gold: #c99a2e;
@@ -12,12 +16,28 @@
     --white: #fff;
     --green: #18794e;
     --red: #b42318;
-    --shadow: 0 18px 55px rgba(20, 18, 12, .09)
+    --shadow: 0 18px 55px rgba(20, 18, 12, .09);
+
+    --font-body: var(--font-dm-sans);
+    --font-heading: var(--font-manrope);
 }
 
 * {
-    box-sizing: border-box
+    box-sizing: border-box;
 }
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-body), sans-serif;
+    color: var(--ink);
+    background: var(--surface);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
 
 html {
     scroll-behavior: smooth
@@ -247,9 +267,12 @@ button {
 h1,
 h2,
 h3,
-h4 {
-    font-family: Manrope, sans-serif;
-    margin: 0
+h4,
+h5,
+h6 {
+    font-family: var(--font-heading), sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.035em;
 }
 
 .hero h1 {
