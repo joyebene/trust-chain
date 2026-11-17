@@ -148,6 +148,7 @@ export default function Login() {
                         </div>
                     </label>
 
+
                     <label>
                         Password
 
@@ -163,7 +164,18 @@ export default function Login() {
                                 autoComplete="current-password"
                             />
                         </div>
+
+                        <div className="flex justify-end mt-2">
+                            <Link
+                                href="/forgot-password"
+                                className="text-sm font-semibold"
+                                style={{ color: "#b68b32" }}
+                            >
+                                Forgot password?
+                            </Link>
+                        </div>
                     </label>
+
 
                     <button
                         disabled={loading}
